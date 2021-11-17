@@ -7,15 +7,15 @@ rc('font',  size='9')
 rc('axes', labelsize='large')
 rc('lines', linewidth=3)
 
-#pylab.ion()
+# pylab.ion()
 
 data = np.array([int(open(fname).read().strip()) for fname in glob.glob('cachedlogs/September-0*/*/threshold2')])
 data.sort()
 
-pylab.figure(figsize=(4,4))
+pylab.figure(figsize=(4, 4))
 
 pylab.clf()
-pylab.plot(1-np.arange(len(data)) * 1./ len(data), data, marker='o')
+pylab.plot(1-np.arange(len(data)) * 1. / len(data), data, marker='o')
 pylab.loglog()
 pylab.xlabel('Fraction of training runs')
 pylab.ylabel('Decimal addition carry length with 50% failure')
@@ -29,4 +29,3 @@ pylab.xlabel('Run')
 pylab.ylabel('# carries before failure')
 pylab.title('5% of runs carry much better, but still not perfectly')
 pylab.savefig('carry_runs.pdf')
-

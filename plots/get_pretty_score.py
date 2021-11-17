@@ -33,7 +33,7 @@ rc('axes', prop_cycle="cycler('color', ['b','g','r','c','m','y','k'] + "
 
 parser = argparse.ArgumentParser(description='Get scores')
 
-RESULT='score'
+RESULT = 'score'
 
 
 parser.add_argument("--key", type=str, default="seq-errors,score")
@@ -94,19 +94,23 @@ parser.set_defaults(simplify=True)
 memory = joblib.Memory(cachedir='/home/ecprice/neural_gpu/cache',
                        verbose=1)
 
+
 def recache(f):
     g = memory.cache(f)
+
     @functools.wraps(g)
     def cached(*args, **kwargs):
         if recache.do_recache:
             try:
                 shutil.rmtree(g.get_output_dir(*args, **kwargs)[0])
-            except OSError: # Not actually in cache
+            except OSError:  # Not actually in cache
                 pass
         return g(*args, **kwargs)
     return cached
 
+
 recache.do_recache = False
+
 
 @recache
 def get_results_dict(fname):
@@ -116,7 +120,7 @@ def get_results_dict(fname):
     with open(fname) as f:
         for line in f:
             words = line.split()
-            if not words: # Blank line on restart
+            if not words:  # Blank line on restart
                 continue
             loc, val = words[:2]
             taskname = words[2]
@@ -127,6 +131,7 @@ def get_results_dict(fname):
             except ValueError:
                 pass
     return answer
+
 
 def get_scores_dict(fname):
     with open(fname) as f:
@@ -139,12 +144,13 @@ def get_scores_dict(fname):
                 except ValueError:
                     break
 
+
 @recache
 def get_dfs(dirname, tasknames):
     fname = dirname+'/steps'
     if not os.path.exists(fname):
         fname = dirname+'/log0'
-    data_series = {t:{} for t in tasknames}
+    data_series = {t: {} for t in tasknames}
     for d in get_scores_dict(fname):
         lens = d['len'].split('/')
         if 'progressive_curriculum=5' in fname:
@@ -160,7 +166,7 @@ def get_dfs(dirname, tasknames):
                 for i, v in zip(missing, vals):
                     vals2[i] = v
                 vals = vals2
-            elif len(vals) < len(tasknames): #Failed to get data for one
+            elif len(vals) < len(tasknames):  # Failed to get data for one
                 vals = [np.nan]*len(tasknames)
             for val, task in zip(vals, tasknames):
                 data_series[task].setdefault(key, []).append(float(val))
@@ -169,9 +175,10 @@ def get_dfs(dirname, tasknames):
         try:
             dfs[task] = pd.DataFrame(data_series[task], index=data_series[task]['step'])
             dfs[task] = dfs[task].drop_duplicates(subset='step', keep='last')
-        except KeyError: #Hasn't gotten to 'step' line yet
+        except KeyError:  # Hasn't gotten to 'step' line yet
             pass
     return dfs
+
 
 def matches(fname, exclude_opts):
     if exclude_opts:
@@ -179,6 +186,7 @@ def matches(fname, exclude_opts):
             if opt in fname:
                 return True
     return False
+
 
 class Scores(object):
     def __init__(self, dirname, tasknames=None, prefix=''):
@@ -249,6 +257,7 @@ class Scores(object):
         lens = self.get_scores('len', self.tasknames[0])
         return lens.index[-1].item() if lens is not None else None
 
+
 def get_name(fname):
     fname = remove_defaults(fname)
     for s in args.remove_strings2.split('|'):
@@ -257,53 +266,59 @@ def get_name(fname):
     ans = ans.replace('_', r'\_')
     return ans
 
+
 def plot_startx(key):
     pylab.xlabel('Steps of training')
+
+
 def plot_starty(key):
     if key:
         mapping = {'score': 'Test error',
-                   'seq-errors': 'Training error',}
+                   'seq-errors': 'Training error', }
         pylab.ylabel(mapping.get(key, key))
     else:
         pylab.ylabel('Sequence error on large input')
 
+
 def plot_results(fname, frame):
-    label = get_name(fname)#fname
+    label = get_name(fname)  # fname
     fmt = dict()
-    if frame is None: #Just put in legend
+    if frame is None:  # Just put in legend
         pylab.plot([], label=label, **fmt)
         return
     x = frame.index
     ysets = list(frame.T.values)
     if args.smoothing > 1:
-        f = lambda y: scipy.signal.savgol_filter(y, args.smoothing, 1) if len(y) > args.smoothing else y
+        def f(y): return scipy.signal.savgol_filter(y, args.smoothing, 1) if len(y) > args.smoothing else y
     else:
-        f = lambda y: y
+        def f(y): return y
     ysets = np.array(map(f, ysets)).T
     y = np.median(ysets, axis=1) if args.median else ysets.mean(axis=1)
-    v=pylab.plot(x, y,
-               label=label,
-               **fmt
-    )
+    v = pylab.plot(x, y,
+                   label=label,
+                   **fmt
+                   )
     if args.traces:
         for ys in list(ysets.T):
             pylab.plot(x, ys, alpha=0.2,
                        color=v[0].get_color(),
-            )
+                       )
     pylab.fill_between(frame.index, ysets.min(axis=1), ysets.max(axis=1),
                        alpha=0.15, color=v[0].get_color())
 
-    #for k in frame.columns:
+    # for k in frame.columns:
     #    pylab.scatter(frame.index, frame[k].values, alpha=0.15, color=v[0].get_color())
+
 
 def get_tasks(key):
     if 'task' not in key:
         return ['rev']
     else:
         locs = key.split('=')
-        index = [i for i,a in enumerate(locs) if a.endswith('task')][0]+1
+        index = [i for i, a in enumerate(locs) if a.endswith('task')][0]+1
         tasks = locs[index].split('-')[0].split(',')
         return tasks
+
 
 def remove_defaults(fname):
     for default in ['max_steps=200000',
@@ -312,7 +327,7 @@ def remove_defaults(fname):
                     'max_steps=80000',
                     'max_steps=100000',
                     'forward_max=201',
-#                    'forward_max=401',
+                    #                    'forward_max=401',
                     'max_length=41',
                     'time_till_eval=4',
                     'always_large=True',
@@ -345,6 +360,7 @@ def remove_defaults(fname):
         fname = fname.replace(s, '')
     return fname
 
+
 def get_key(fname):
     if not args.separate_seeds:
         fname = fname.split('-seed')[0]
@@ -352,17 +368,22 @@ def get_key(fname):
     fname = remove_defaults(fname)
     return fname
 
+
 def get_prefix(fileset):
     longest_cp = os.path.commonprefix(fileset)
     i = 1
     while i <= len(longest_cp) and longest_cp[-i] not in '-/':
         i += 1
-    return longest_cp[:len(longest_cp)+ 1-i]
+    return longest_cp[:len(longest_cp) + 1-i]
+
 
 def sort_key_fn(label):
     return label.replace('nmaps=24', 'nmaps=024')
 
+
 badkeys = set()
+
+
 def plot_all(func, scores, column=None, taskset=None, order=None):
     d = {}
     for s in scores:
@@ -385,6 +406,7 @@ def plot_all(func, scores, column=None, taskset=None, order=None):
             columns = [score.get_scores(column, task)
                        for score in d[key]]
             columns = [c for c in columns if c is not None and not c.isnull().all()]
+
             def strip_last(c):
                 if c is None or c.index[-1] != 200200:
                     return c
@@ -398,9 +420,10 @@ def plot_all(func, scores, column=None, taskset=None, order=None):
             if column != 'score':
                 columns = [c for c in columns if len(c) >= median_len / 2 and len(c) >= args.min_length]
             else:
-                length_fn = lambda c: c.last_valid_index() // 200
+                def length_fn(c): return c.last_valid_index() // 200
                 median_len = np.median(map(length_fn, columns))
-                columns = [c for c in columns if length_fn(c) >= median_len / 2 and length_fn(c) >= args.min_length and len(c) > 1]
+                columns = [c for c in columns if length_fn(
+                    c) >= median_len / 2 and length_fn(c) >= args.min_length and len(c) > 1]
             data = pd.DataFrame(columns).T
             if not len(data):
                 func(score.args_str(), None)
@@ -413,15 +436,18 @@ def plot_all(func, scores, column=None, taskset=None, order=None):
             data = data.interpolate(method='nearest')
             func(score.args_str(), data)
 
+
 legend_locs = dict(score='upper right',
                    len='lower right',
                    errors='upper right')
+
 
 def get_filter(column):
     if column == 'len':
         return lambda x: x == 41
     else:
         return lambda x: x < 0.01
+
 
 def get_print_results(scores, column, avg=10):
     assert len(set(x.key for x in scores)) == 1
@@ -442,6 +468,7 @@ def get_print_results(scores, column, avg=10):
 
     return ans
 
+
 def construct_parsed_data(scores, columns, save_dir):
     d = {}
     for s in scores:
@@ -452,20 +479,23 @@ def construct_parsed_data(scores, columns, save_dir):
     for i, key in enumerate(d):
         ans = {}
         ans['metadata'] = dict(commandline=d[key][0].commandline(),
-                               count = len(d[key]),
-                               steps = [s.total_steps() for s in d[key]]
-        )
+                               count=len(d[key]),
+                               steps=[s.total_steps() for s in d[key]]
+                               )
         for col in columns:
             ans[col] = get_print_results(d[key], col)
         with open(os.path.join(save_dir, key), 'w') as f:
             print(yaml.safe_dump(ans), file=f)
         print("Done %s/%s" % (i+1, len(d)))
 
+
 @recache
 def is_valid_dir(f):
     return os.path.exists(os.path.join(f, 'log0'))
 
+
 gs = None
+
 
 def run_plots(args, scores, all_tasks, keys):
     global gs
@@ -486,8 +516,8 @@ def run_plots(args, scores, all_tasks, keys):
 
     figkws = {}
     if args.figsize:
-        figkws['figsize']=map(int, args.figsize.split(','))
-    fig = pylab.figure(1,**figkws)
+        figkws['figsize'] = map(int, args.figsize.split(','))
+    fig = pylab.figure(1, **figkws)
     task_overlays = args.overlay
     if gs is None:
         gs = gridspec.GridSpec(len(keys), len(all_tasks) / task_overlays)
@@ -512,9 +542,9 @@ def run_plots(args, scores, all_tasks, keys):
             order = get_value(args.order, i)
             if order:
                 order = map(int, order.split(','))
-            plot_all(plot_results, scores, column=key, taskset = [task], order=order)
+            plot_all(plot_results, scores, column=key, taskset=[task], order=order)
             if not args.global_legend and (not args.one_legend or (ki == len(keys)-1 and
-                                       (i == len(all_tasks)-1 or 1))):
+                                                                   (i == len(all_tasks)-1 or 1))):
                 pylab.legend(loc=legend_locs.get(key, 0))
             if not args.titles:
                 pylab.title('Task %s' % task)
@@ -526,26 +556,26 @@ def run_plots(args, scores, all_tasks, keys):
                 axes[ki][i].yaxis.set_major_formatter(mtick.FuncFormatter(
                     lambda x, pos: '% 2d\\%%' % (x*100)
                 ))
-            ylims = map(float, get_value(args.ylims, ki).split(',')) if args.ylims else (0,1)
+            ylims = map(float, get_value(args.ylims, ki).split(',')) if args.ylims else (0, 1)
             pylab.ylim(ylims)
-            xlims = map(float, get_value(args.xlims, i).split(',')) if args.xlims else (0,None)
+            xlims = map(float, get_value(args.xlims, i).split(',')) if args.xlims else (0, None)
             pylab.xlim(xlims)
 
             if args.nbinsx:
-                pylab.locator_params(axis='x',nbins=int(get_value(args.nbinsx, i)))
+                pylab.locator_params(axis='x', nbins=int(get_value(args.nbinsx, i)))
             if args.nbinsy:
-                pylab.locator_params(axis='y',nbins=int(get_value(args.nbinsy, ki)))
+                pylab.locator_params(axis='y', nbins=int(get_value(args.nbinsy, ki)))
             if args.yticks:
                 pylab.yticks(map(float, get_value(args.yticks, ki).split(',')))
 
             axes[ki][i].xaxis.set_major_formatter(mtick.FuncFormatter(
                 lambda x, pos: '%dk' % (x//1000) if x else '0'
             ))
-    rect = [0,0,1,.92]
+    rect = [0, 0, 1, .92]
     if args.global_legend:
         if not args.only_plot:
             ax = [row for row in axes if row[0]][0][0]
-        lines,labels = ax.get_legend_handles_labels()
+        lines, labels = ax.get_legend_handles_labels()
         my_labels = args.global_legend.split('|')
         if my_labels == ['1']:
             my_labels = labels
@@ -560,6 +590,7 @@ def run_plots(args, scores, all_tasks, keys):
     else:
         pylab.show()
 
+
 def get_value(s, i):
     v = s.split('|')
     if len(v) == 1:
@@ -569,7 +600,7 @@ def get_value(s, i):
 
 def main():
     global args
-    args =  parser.parse_args()
+    args = parser.parse_args()
     recache.do_recache = args.recache
     print("Started")
     all_tasks = sorted(set(x for file in args.files for x in get_tasks(get_key(file))))
@@ -588,6 +619,7 @@ def main():
             print(yaml.safe_dump(ans))
     elif args.job == 'plot':
         run_plots(args, scores, all_tasks, keys)
+
 
 '''
 python  get_pretty_score.py cachedlogs/{Jul,A}*/*24*={b,}add{e,z,}*  --task badd,badde,baddz,add,adde,addz --remove_strings '|-progressive_|curriculum=2|curriculum=5' --exclude='forward_max|rx_step|cutoff|binar|grad_noise|t,|dropout|badd,add|batchnorm|resnet'  --min-length 30 --title 'Alignment helps addition' --titles='||Binary addition, 24 filters|'  --xlims='0,30000' --nbinsx=3 --global-legend='Padded|Aligned|Unpadded' --overlay=3 --save-to=moo.pdf --no-startx dump magic1.pickle

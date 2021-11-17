@@ -8,7 +8,8 @@ from neuralgpu import trainer
 
 
 def main(_):
-  trainer.start_and_train()
+    trainer.start_and_train()
+
 
 if __name__ == "__main__":
-  tf.app.run()
+    tf.app.run()

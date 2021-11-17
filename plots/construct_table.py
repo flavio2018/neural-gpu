@@ -19,12 +19,14 @@ parser.add_argument("--metric", type=str, default='score')
 parser.add_argument("--dir", type=str, default='/home/ecprice/large/research/neural_gpu/neural_parsed_logs/newer')
 parser.add_argument("--curr", type=bool, default=True)
 parser.add_argument("tasks", type=str, nargs='*')
-args =  parser.parse_args()
+args = parser.parse_args()
+
 
 def groupby(lst, num):
     ans = []
     for i in range(0, len(lst), num):
         yield lst[i:i+num]
+
 
 class Run(dict):
     @property
@@ -69,6 +71,7 @@ class Run(dict):
                 res = np.inf
         return (res, count)
 
+
 def value_to_str(val):
     if val == np.inf:
         res = '$\\infty$'
@@ -80,11 +83,13 @@ def value_to_str(val):
         res = str(val)
     return res
 
+
 def pair_to_str(pair):
     if pair is None:
         return '-'
     else:
         return '%s (%s)' % (value_to_str(pair[0]), pair[1])
+
 
 def load_all_data(dirname):
     files = glob.glob(os.path.join(dirname, '*'))
@@ -94,12 +99,14 @@ def load_all_data(dirname):
             results.append(Run(yaml.load(f)))
     return results
 
+
 all_runs = load_all_data(args.dir)
 
 if not args.tasks:
     s = set([run.task for run in all_runs])
     print('Need task name.  Options:', ' '.join(s))
     sys.exit()
+
 
 def build_table(all_runs, tasks):
     rows = {}
@@ -110,23 +117,26 @@ def build_table(all_runs, tasks):
             d[run.task] = run
     return rows
 
+
 def texify(s):
     return r'\texttt{%s}' % (s.replace('_', r'\_'))
+
 
 def table_to_str(rows, tasks, metric):
     ans = []
     ans.append(' & '.join(['Name', 'Mean'] + list(tasks)))
     for version, runs in sorted(rows.items()):
         values = [runs[t].get_value(metric) if t in runs else None for t in tasks]
-        row_strs = ([texify(version.split('=',1)[1])] +
+        row_strs = ([texify(version.split('=', 1)[1])] +
                     [value_to_str(np.mean([v[0] for v in values if v is not None]))] +
                     [pair_to_str(value) for value in values])
         ans.append(' & '.join(row_strs))
-    interior =  '\\\\\n'.join(ans)
+    interior = '\\\\\n'.join(ans)
     table = r'''\begin{tabular}{lc%s}
 %s
 \end{tabular}''' % ('c'*len(tasks), interior)
     return table
+
 
 def split_table_to_str(table, tasks, metric, maxcol):
     ans = []
@@ -134,7 +144,8 @@ def split_table_to_str(table, tasks, metric, maxcol):
         ans.append(table_to_str(table, lst, metric))
     return '\n\n\\noindent'.join(ans)
 
-def get_document(rows, tasks, metrics, maxcol = 7):
+
+def get_document(rows, tasks, metrics, maxcol=7):
     table = build_table(rows, tasks)
     results = []
     for metric in metrics:
@@ -147,5 +158,6 @@ def get_document(rows, tasks, metrics, maxcol = 7):
 %s
 \end{document}
     ''' % '\n\\newpage\n'.join(results))
+
 
 print(get_document(all_runs, args.tasks, args.metric.split(','), 7))

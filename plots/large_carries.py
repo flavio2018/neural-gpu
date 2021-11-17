@@ -13,6 +13,8 @@ With '-t', in 'thresholds' it places the minimum threshold at which the success 
 """
 
 from __future__ import print_function
+import carries
+from neuralgpu import trainer, data_utils
 import tensorflow as tf
 import numpy as np
 import operator
@@ -24,11 +26,9 @@ import glob
 import sys
 
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
-from neuralgpu import trainer, data_utils
-import carries
 
-#data_utils.bins.pop()
-#data_utils.bins.pop()
+# data_utils.bins.pop()
+# data_utils.bins.pop()
 
 #del data_utils.bins[6]
 #del data_utils.bins[4]
@@ -46,12 +46,13 @@ dir = None
 model = None
 sess = None
 
+
 def load_model(dir):
     global model, sess
     reconfig = {'mode': 1,           # No backprop
                 'forward_max': 401}  # Large enough to check 200-digit carries
     if model is None:
-        sess=tf.Session()
+        sess = tf.Session()
         model = trainer.load_model(sess, dir, reconfig)
     else:
         model.saver.restore(sess, dir+'/neural_gpu.ckpt-100000')
@@ -66,12 +67,14 @@ def find_dirs(base_dir='../logs', check_file='carries.csv'):
                     yield full_dir
 
 
-locs = list(range(1, 30)) + list(range(30,100,5))
+locs = list(range(1, 30)) + list(range(30, 100, 5))
+
 
 def get_data(dir, locs=locs):
     load_model(dir)
     results = CarryGenerator.get_rates(sess, model, locs, 201 if randloc else None, 1)
     return results
+
 
 def run_dir(dir):
     try:
@@ -85,9 +88,10 @@ def run_dir(dir):
     with open(dir+'/carries.csv', 'w') as f:
         f.write(results.to_csv())
 
+
 def bsearch(is_leq, lo=1, hi=None):
     if hi is None:
-        hi =  2*lo
+        hi = 2*lo
         while not is_leq(hi):
             lo, hi = hi+1, 2*hi
     while lo < hi:
@@ -97,6 +101,7 @@ def bsearch(is_leq, lo=1, hi=None):
         else:
             lo = mid + 1
     return lo
+
 
 def find_threshold():
     def is_leq(n):
@@ -113,18 +118,21 @@ def find_threshold():
         return result >= .5
     return bsearch(is_leq)
 
+
 def main_results():
     for dir in find_dirs():
         print('Checking', dir)
         run_dir(dir)
 
-def main_thresholds(fname = 'threshold'):
+
+def main_thresholds(fname='threshold'):
     for dir in find_dirs(check_file=fname):
         print('Checking', dir)
         load_model(dir)
         thresh = find_threshold()
         with open(os.path.join(dir, fname), 'w') as f:
             print(thresh, file=f)
+
 
 if __name__ == '__main__':
     if '-t' in sys.argv:
