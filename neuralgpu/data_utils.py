@@ -31,7 +31,7 @@ import tensorflow as tf
 
 from tensorflow.python.platform import gfile
 
-FLAGS = tf.app.flags.FLAGS
+FLAGS = tf.compat.v1.flags.FLAGS
 
 # Lengths of NeuralGPU instances.  Inputs will be padded to the next
 # larger one.
