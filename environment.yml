@@ -1,0 +1,5 @@
+name: ngpu
+dependencies:
+        - tensorflow=1.11.0
+        - matplotlib
+        - pyyaml
