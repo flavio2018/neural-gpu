@@ -25,7 +25,7 @@ from . import mytf
 from . import data_utils
 from .records import NeuralGPUResult
 
-FLAGS = tf.compat.v1.flags.FLAGS
+FLAGS = tf.app.flags.FLAGS
 
 
 def tf_cut_function(val, vlo, vhi, glo, ghi):
