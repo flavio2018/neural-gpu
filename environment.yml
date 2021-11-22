@@ -1,6 +1,6 @@
 name: ngpu-original
 dependencies:
-        - matplotlib=1.4
-        - tensorflow=0.7.1
-        - python=3.4
-        - pyyaml=3.11
+        - matplotlib
+        - tensorflow=0.10.0rc0  # oldest version available in conda
+        - python
+        - pyyaml
