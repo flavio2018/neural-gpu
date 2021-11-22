@@ -6,3 +6,5 @@
 *.pickle
 *.csv
 *.idea
+
+tmp/
