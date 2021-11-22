@@ -74,7 +74,7 @@ def define_flags():
     tf.app.flags.DEFINE_float("smooth_grad", 0.0, "Whether to avoid clipping gradient")
     tf.app.flags.DEFINE_float("smooth_grad_tanh", 0.0, "Whether to avoid clipping tanh gradient")
     tf.app.flags.DEFINE_string("task", "badd", "Which task are we learning?")
-    tf.app.flags.DEFINE_string("train_dir", "/tmp/neural", "Directory to store models.")
+    tf.app.flags.DEFINE_string("train_dir", "./tmp/neural", "Directory to store models.")
 
     tf.app.flags.DEFINE_float("layer_scale", 1.0, "Number of layers to use")
 
@@ -104,9 +104,8 @@ def define_flags():
 
 
 FLAGS = tf.app.flags.FLAGS
-define_flags()
-# if not FLAGS.__parsed:  # Hack so reload() works
-#     define_flags()
+if not FLAGS.__parsed:  # Hack so reload() works
+    define_flags()
 
 EXTRA_EVAL = 2
 
