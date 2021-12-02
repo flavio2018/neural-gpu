@@ -1,12 +1,12 @@
-from neuralgpu import trainer, generators
-import numpy as np
-import tensorflow as tf
-
 import os
 import sys
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
-DIR = '/tmp/moo/cow3'
+import numpy as np
+import tensorflow as tf
+from neuralgpu import trainer, generators
+
+DIR = './log/first-simple-trial'
 
 sess = tf.Session()
 model = trainer.load_model(sess, DIR)
