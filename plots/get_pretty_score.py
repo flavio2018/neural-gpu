@@ -91,7 +91,7 @@ parser.add_argument('--simplify', dest='simplify', action='store_true')
 parser.add_argument('--no-simplify', dest='simplify', action='store_false')
 parser.set_defaults(simplify=True)
 
-memory = joblib.Memory(cachedir='/home/ecprice/neural_gpu/cache',
+memory = joblib.Memory(cachedir='/media/shift97/My Passport/Flavio/neural-gpu/cache',
                        verbose=1)
 
 
@@ -520,7 +520,7 @@ def run_plots(args, scores, all_tasks, keys):
     fig = pylab.figure(1, **figkws)
     task_overlays = args.overlay
     if gs is None:
-        gs = gridspec.GridSpec(len(keys), len(all_tasks) / task_overlays)
+        gs = gridspec.GridSpec(len(keys), int(len(all_tasks) / task_overlays))
     for ki, key in enumerate(keys):
         for i, task in enumerate(all_tasks):
             full_plot_index = ki*len(all_tasks) + i
