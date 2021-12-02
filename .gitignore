@@ -6,5 +6,12 @@
 *.pickle
 *.csv
 *.idea
+*.png
+*.slurm
 
-tmp/
+logs/
+call-graphs/
+cache/
+
+print_project_functions_calls.sh
+print_module_functions_calls.py
