@@ -9,9 +9,10 @@
 *.png
 *.slurm
 
-logs/
 call-graphs/
 cache/
+logs/
+tmp/
 
 print_project_functions_calls.sh
 print_module_functions_calls.py
